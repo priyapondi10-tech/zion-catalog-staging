@@ -1,0 +1,43 @@
+name: Build and deploy staging homepage
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency:
+  group: staging-pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the reviewed, pinned public homepage snapshot
+        run: python3 build.py
+      - name: Verify full copy, staging labels, links and source hash
+        run: python3 -m unittest -v test_build.py
+      - name: Commit the complete generated homepage files
+        run: |
+          cp dist/index.html index.html
+          cp dist/SOURCE.json SOURCE.json
+          cp dist/robots.txt robots.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html SOURCE.json robots.txt
+          if ! git diff --cached --quiet; then
+            git commit -m 'Publish verified pinned-source staging homepage'
+            git push origin HEAD:main
+          fi
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - name: Publish HTTPS GitHub Pages site
+        id: deployment
+        uses: actions/deploy-pages@v4
