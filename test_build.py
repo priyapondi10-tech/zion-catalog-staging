@@ -28,5 +28,16 @@ class StagingChecks(unittest.TestCase):
     def test_no_custom_domain_binding(self):
         self.assertFalse((ROOT / 'dist/CNAME').exists())
         self.assertFalse(self.metadata['custom_domains_bound'])
+    def test_webpage_structured_data(self):
+        match = re.search(r'<script id="staging-structured-data" type="application/ld\+json">(.*?)</script>', self.html, re.S)
+        self.assertIsNotNone(match)
+        data = json.loads(match.group(1))
+        self.assertEqual(data['@context'], 'https://schema.org')
+        self.assertEqual(data['@type'], 'WebPage')
+        self.assertEqual(data['url'], 'https://priyapondi10-tech.github.io/zion-catalog-staging/')
+        self.assertEqual(data['isBasedOn'], 'https://ziontechgroup.com/')
+    def test_existing_production_canonical_preserved(self):
+        self.assertEqual(self.html.count('rel="canonical"'), 1)
+        self.assertIn('<link rel="canonical" href="https://ziontechgroup.com/"', self.html)
 if __name__ == '__main__':
     unittest.main()

@@ -13,8 +13,10 @@ def build(raw):
     html = re.sub(r'''(\b(?:href|src|action)=["'])/(?!/)''', lambda m: m.group(1) + 'https://ziontechgroup.com/', html)
     html = re.sub(r'<meta\b[^>]*name=["\']robots["\'][^>]*>', '', html, flags=re.I)
     html = html.replace('<title>', '<title>STAGING — ', 1)
+    structured_data = {'@context': 'https://schema.org', '@type': 'WebPage', '@id': 'https://priyapondi10-tech.github.io/zion-catalog-staging/#webpage', 'url': 'https://priyapondi10-tech.github.io/zion-catalog-staging/', 'name': 'STAGING — Zion Tech Group | Advanced AI Services & IT Solutions', 'description': 'Noindex staging copy of the Zion Tech Group homepage with links to four working browser-based utilities. This is not the production site.', 'isBasedOn': 'https://ziontechgroup.com/', 'inLanguage': 'en'}
+    schema_script = '<script id="staging-structured-data" type="application/ld+json">' + json.dumps(structured_data, ensure_ascii=False) + '</script>\n'
     styles = (ROOT / 'staging.css').read_text(encoding='utf-8')
-    html = html.replace('</head>', '<meta name="robots" content="noindex,nofollow,nosnippet">\n<style id="staging-styles">' + styles + '</style>\n</head>', 1)
+    html = html.replace('</head>', '<meta name="robots" content="noindex,nofollow,nosnippet">\n' + schema_script + '<style id="staging-styles">' + styles + '</style>\n</head>', 1)
     banner = '<div class="stage-banner" role="note">STAGING COPY · Hosted by priyapondi10-tech · Production is unchanged · <a href="#staging-apps">Open the four new utilities</a></div>'
     html, body_count = re.subn(r'(<body\b[^>]*>)', lambda m: m.group(1) + banner, html, count=1, flags=re.I)
     feature = (ROOT / 'features.html').read_text(encoding='utf-8')
